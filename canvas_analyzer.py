@@ -28,10 +28,9 @@ def main(user_id):
     course_ids = get_course_ids(courses)
     choose_course(course_ids)
     submissions = canvas_requests.get_submissions
-    summarize_points(submissions, points_possible, group_weight, score)
-    summarize_groups()
-    plot_scores()
-    plot_grade_trends()
+    summarize_points(submissions)
+    summarize_groups(submissions)
+
 
 
 # 2) print_user_info
@@ -71,44 +70,53 @@ def get_course_ids(courses):
 
 # 6) choose_course
 def choose_course(course_ids)->int:
-    while int(input("What is your class ID?")) not in course_ids:
-        user_id = int(input("What is your class ID?"))
-    return user_id
+    my_course = int(input("Pick a course id:"))
+    while my_course not in course_ids:
+        my_course = int(input("Pick a course id:"))
+    return my_course
 
 
 # 7) summarize_points
 
 
-def summarize_points(submissions: list, points_possible: int, group_weight: int, score: int):
-   points_possible_so_far = submissions[points_possible] * submissions[group_weight]
-   points_obtained = submissions[score] * submissions[group_weight]
-   raw_grade = points_obtained / points_possible_so_far
-   unrounded_grade = raw_grade * 100
-   grade = round(unrounded_grade, 2)
-   return grade
+def summarize_points(submissions: []):
+    total_possible = 0
+    points_obtained = 0
+    for submission in submissions:
+        if submission["score"] is not None:
+            points_possible = submission["assignment"]["points_possible"]
+            group_weight = submission["assignment"]["group"]["group_weight"]
+            total_possible = total_possible + (points_possible * group_weight)
+            points_obtained = points_obtained + (submission["score"] * group_weight)
+    print("Points possible so far: " + str(total_possible))
+    print("Points obtained: " + str(points_obtained))
+    print("Current grade: " + str(round((points_obtained / total_possible) * 100)))
 
 
 # 8) summarize_groups
-#def summarize_groups():
- #   pass
+def summarize_groups(submissions:list):
+    group_points={}
+    group_score={}
+    for submission in submissions:
+        if submission["score"] is not None:
+            group_name = submission["assignment"]["group"]["name"]
+            if group_name not in group_score:
+                group_points[group_name] = 0
+                group_score[group_name] = 0
+            group_score[group_name] = group_score[group_name] + submission["score"]
+            group_points[group_name] = group_points[group_name] + submission["assignment"]["points_possible"]
+    for name in group_score:
+        score = group_score[name]
+        points = group_points[name]
+        print("*", name, round(100 * score/points))
+
 
 
 # 9) plot_scores
 import matplotlib.pyplot as plt
 
-
-#def plot_scores():
-  #  '''import datetime
-   # a_string_date = submissions[date_due]
-    #due_at = datetime.datetime.strptime(a_string_date, "%Y-%m-%dT%H:%M:%SZ")
-  #  x = grade
-  #  y = due_at
-  #  fig = plt.figure()
-   # ax = fig.add_subplot(111)
-   # ax.plot(x, y, color='blue', linewidth=5)
-   # plt.savefig('plotofscores.png')
-   # plt.show()'''
- #   pass
+def plot_scores(grade:int,submissions:dict):
+   pass
 
 
 # 10) plot_grade_trends
@@ -120,8 +128,8 @@ import matplotlib.pyplot as plt
 # that your `test_my_solution.py` does not execute it.
 if __name__ == "__main__":
     main('hermione')
-    # main('ron')
-    # main('harry')
+    main('ron')
+    main('harry')
 
     # https://community.canvaslms.com/docs/DOC-10806-4214724194
     # main('YOUR OWN CANVAS TOKEN (You know, if you want)')
